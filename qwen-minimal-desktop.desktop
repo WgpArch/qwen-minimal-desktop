@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Qwen Minimal Desktop
+Comment=Lightweight GTK4 Chat for Qwen & Kimi
+Exec=qwen-minimal-desktop
+Icon=applications-internet
+Terminal=false
+Type=Application
+Categories=Utility;Chat;Development;
+Keywords=qwen;ai;chat;ollama;kimi;
