@@ -1,5 +1,11 @@
 # qwen-minimal-desktop
 
+[![Docs](https://img.shields.io/badge/Docs-GitHub_Pages-blue.svg)](https://wgparch.github.io/qwen-minimal-desktop/)
+[![AUR version](https://img.shields.io/aur/version/qwen-minimal-desktop)](https://aur.archlinux.org/packages/qwen-minimal-desktop)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
+[![GTK 4](https://img.shields.io/badge/GTK-4-7FE818.svg)](https://www.gtk.org/)
+
 A single-file, zero-dependency GTK4 chat client for Qwen and Kimi. Built specifically to run efficiently on older hardware (like 2012-era Intel laptops) without melting your CPU or spinning up fans.
 
 ## Features

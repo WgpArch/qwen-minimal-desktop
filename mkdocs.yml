@@ -1,0 +1,24 @@
+site_name: Qwen Minimal Desktop
+site_url: https://wgparch.github.io/qwen-minimal-desktop/
+repo_url: https://github.com/WgpArch/qwen-minimal-desktop
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: light blue
+    scheme: slate
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Configuration: configuration.md
+  - Keeping Hardware Cool: thermal-tuning.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
