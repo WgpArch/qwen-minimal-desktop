@@ -62,6 +62,10 @@ DEFAULT_CONFIG = {
 def load_config():
     if CONFIG_PATH.exists():
         try:
+            CONFIG_PATH.chmod(0o600)  # tighten pre-existing files at launch
+        except Exception:
+            pass
+        try:
             saved = json.loads(CONFIG_PATH.read_text())
             merged = dict(DEFAULT_CONFIG)
             merged.update(saved)
@@ -76,6 +80,10 @@ def load_config():
 
 def save_config(cfg):
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2))
+    try:
+        CONFIG_PATH.chmod(0o600)  # API keys: owner-only
+    except Exception:
+        pass
 
 
 def init_db():
@@ -104,6 +112,10 @@ def init_db():
         c.execute("ALTER TABLE projects ADD COLUMN archived INTEGER DEFAULT 0")
     c.execute("INSERT OR IGNORE INTO projects (id, name) VALUES (1, 'Default')")
     conn.commit()
+    try:
+        DB_PATH.chmod(0o600)  # chat history: owner-only
+    except Exception:
+        pass
     return conn
 
 
