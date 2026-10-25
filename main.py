@@ -88,6 +88,10 @@ def save_config(cfg):
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
+    try:
+        DB_PATH.chmod(0o600)  # existing chat history: owner-only
+    except Exception:
+        pass
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS projects (
