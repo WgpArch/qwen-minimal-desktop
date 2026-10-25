@@ -739,46 +739,45 @@ class QwenMinimalApp(Gtk.Application):
         box = lbl.get_parent()
         if box is None:
             return
-        # collect existing children in order
         kids = []
         ch = box.get_first_child()
         while ch is not None:
-            kids.append(ch)
-            ch = ch.get_next_sibling()
+            kids.append(ch); ch = ch.get_next_sibling()
         entry = Gtk.Entry(text=self._project_name(pid))
         entry.set_hexpand(True)
-        # detach all, then re-add with entry replacing the label
         for k in kids:
             box.remove(k)
         for k in kids:
             box.append(entry if k is lbl else k)
         entry.grab_focus()
         entry.set_position(-1)
-        self._rename_entry = entry  # guard against double commit
-        def commit(*_a):
-            if getattr(self, "_rename_done", False):
+        state = {"done": False}
+        def finish(cancel):
+            if state["done"]:
                 return
-            self._rename_done = True
+            state["done"] = True
+            if cancel:
+                self.rebuild_project_list()
+                return
             nm = entry.get_text().strip() or self._project_name(pid)
             c = self.conn.cursor()
             c.execute("UPDATE projects SET name=? WHERE id=?", (nm, pid))
             self.conn.commit()
             if pid == self.current_project_id:
                 self.project_title_label.set_label(nm)
-            self._rename_done = False
             self.rebuild_project_list()
         ekc = Gtk.EventControllerKey()
-        def on_key(_ctl, keyval, _kc, state):
+        def on_key(_ctl, keyval, _kc, _st):
             if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
-                commit(); return True
+                finish(False); return True
             if keyval == Gdk.KEY_Escape:
-                self._rename_done = True
-                self.rebuild_project_list(); return True
+                finish(True); return True
             return False
         ekc.connect("key-pressed", on_key)
         entry.add_controller(ekc)
-        entry.connect("activate", lambda *_: commit())
-        entry.connect("focus-out", lambda *_: commit())
+        # activate (Enter) -> commit; focus-out -> commit only if not already done
+        entry.connect("activate", lambda *_: finish(False))
+        entry.connect("focus-out", lambda *_: finish(False))
 
     def on_project_activated(self, listbox, row):
         pid = getattr(row, "proj_id", None)
