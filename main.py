@@ -708,6 +708,7 @@ class QwenMinimalApp(Gtk.Application):
             lbl = Gtk.Label(label=("[arch] " if archived else "") + name,
                             hexpand=True, xalign=0)
             lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            lbl.proj_id = pid
             if archived:
                 lbl.add_css_class("dim-label")
             if pid == self.current_project_id:
@@ -724,7 +725,56 @@ class QwenMinimalApp(Gtk.Application):
             lbrow = Gtk.ListBoxRow()
             lbrow.set_child(row)
             lbrow.proj_id = pid
+            gest = Gtk.GestureClick()
+            gest.set_button(1)
+            gest.connect("pressed", self.on_row_pressed, pid, lbl)
+            row.add_controller(gest)
             lb.append(lbrow)
+
+    def on_row_pressed(self, gest, n_press, x, y, pid, lbl):
+        if n_press == 2:
+            self._begin_rename(pid, lbl)
+
+    def _begin_rename(self, pid, lbl):
+        box = lbl.get_parent()
+        if box is None:
+            return
+        idx = None
+        for i in range(box.get_first_child() and 0 or 0, 99):
+            pass
+        # find label position within the box
+        pos = 0
+        child = box.get_first_child()
+        while child is not None:
+            if child is lbl:
+                break
+            pos += 1
+            child = child.get_next_sibling()
+        entry = Gtk.Entry(text=self._project_name(pid))
+        entry.set_hexpand(True)
+        box.remove(lbl)
+        box.insert(entry, pos)
+        entry.grab_focus()
+        entry.set_position(-1)
+        def commit(*_a):
+            nm = entry.get_text().strip() or self._project_name(pid)
+            c = self.conn.cursor()
+            c.execute("UPDATE projects SET name=? WHERE id=?", (nm, pid))
+            self.conn.commit()
+            if pid == self.current_project_id:
+                self.project_title_label.set_label(nm)
+            self.rebuild_project_list()
+        def on_key(_e, keyval, _kc, state):
+            if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+                commit()
+                return True
+            if keyval == Gdk.KEY_Escape:
+                self.rebuild_project_list()
+                return True
+            return False
+        entry.connect("activate", commit)
+        entry.connect("key-press-event", on_key)
+        entry.connect("focus-out", lambda *_: commit())
 
     def on_project_activated(self, listbox, row):
         pid = getattr(row, "proj_id", None)
