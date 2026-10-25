@@ -18,6 +18,8 @@ from datetime import datetime
 
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk, Pango, Gio
+gi.require_version('Adw', '1')
+from gi.repository import Adw
 
 CONFIG_DIR = Path(GLib.get_user_config_dir()) / "qwen-desktop"
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -759,17 +761,39 @@ class QwenMinimalApp(Gtk.Application):
 
     def on_delete_project(self, widget, pid):
         c = self.conn.cursor()
-        c.execute("DELETE FROM messages WHERE project_id=?", (pid,))
-        c.execute("DELETE FROM projects WHERE id=?", (pid,))
-        self.conn.commit()
-        c.execute("SELECT id FROM projects ORDER BY id LIMIT 1")
-        r = c.fetchone()
-        if not r:
-            c.execute("INSERT INTO projects (name) VALUES ('Default')")
+        c.execute("SELECT name FROM projects WHERE id=?", (pid,))
+        row = c.fetchone()
+        name = (row[0] if row else "this project")
+
+        dlg = Adw.MessageDialog(
+            transient_for=self, modal=True,
+            heading="Delete project?",
+        body = chr(34) + name + chr(34) + " and all its messages will be permanently removed."
+        )
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("delete", "Delete")
+        dlg.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.set_default_response("cancel")
+        dlg.set_close_response("cancel")
+
+        def on_response(_d, response):
+            if response != "delete":
+                return
+            cc = self.conn.cursor()
+            cc.execute("DELETE FROM messages WHERE project_id=?", (pid,))
+            cc.execute("DELETE FROM projects WHERE id=?", (pid,))
             self.conn.commit()
-            r = (c.lastrowid,)
-        self.switch_project(r[0])
-        self.rebuild_project_list()
+            cc.execute("SELECT id FROM projects ORDER BY id LIMIT 1")
+            r = cc.fetchone()
+            if not r:
+                cc.execute("INSERT INTO projects (name) VALUES ('Default')")
+                self.conn.commit()
+                r = (cc.lastrowid,)
+            self.switch_project(r[0])
+            self.rebuild_project_list()
+
+        dlg.connect("response", on_response)
+        dlg.present()
 
     # ---------- generation ----------
     def on_message_sent(self, widget):
