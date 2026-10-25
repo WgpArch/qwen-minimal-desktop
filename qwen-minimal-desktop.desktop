@@ -2,7 +2,7 @@
 Name=Qwen Minimal Desktop
 Comment=Lightweight GTK4 Chat for Qwen & Kimi
 Exec=qwen-minimal-desktop
-Icon=applications-internet
+Icon=qwen-minimal-desktop
 Terminal=false
 Type=Application
 Categories=Utility;Chat;Development;
